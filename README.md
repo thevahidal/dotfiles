@@ -4,7 +4,7 @@ This repository manages my configuration files (dotfiles) across various machine
 
 The directory structure is simple: each program has its own folder (a "package") containing the files and directories that should be symlinked into the home directory (`~`).
 
-## ⚙️ Installation
+## Installation
 
 ### Prerequisites
 
@@ -35,7 +35,7 @@ The directory structure is simple: each program has its own folder (a "package")
     find . -mindepth 1 -maxdepth 1 -type d -printf '%f\0' | xargs -0 stow -t ~
     ```
 
-## 🛠️ Maintenance
+## Maintenance
 
 ### Unstow / Remove Links
 
