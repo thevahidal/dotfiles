@@ -1,0 +1,21 @@
+[credential]
+	helper = store
+[user]
+	email = thevahidal@gmail.com
+	name = thevahidal
+[core]
+	editor = nvim
+[init]
+	defaultBranch = master
+[branch]
+	sort = -committerdate
+[push]
+	autoSetupRemote = true
+[alias]
+	co = checkout
+	br = branch
+	ci = commit
+	st = status
+[pull]
+	rebase = true
+

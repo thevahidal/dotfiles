@@ -1,0 +1,75 @@
+return {}
+
+-- return {
+--   "thevahidal/deej.nvim",
+--   config = function()
+--     require("deej").setup({
+--       beat_dir = vim.fn.stdpath("data") .. "/deej/beats/",
+--       themes = {
+--         default = {
+--           beat_files = {
+--             default = { "kick1.wav", "kick2.wav" },
+--             enter = { "snare1.wav", "snare2.wav" },
+--             brace = { "hihat1.wav", "hihat2.wav" },
+--             flair = { "scratch.wav" },
+--           },
+--           loop = "loop.wav",
+--           language_triggers = {
+--             python = { [":"] = "snare1.wav", ["def"] = "hihat1.wav" },
+--             lua = { ["function"] = "hihat1.wav", ["end"] = "snare1.wav" },
+--             javascript = { ["=>"] = "snare1.wav", [";"] = "clap1.wav" },
+--           },
+--           regex_triggers = {
+--             ["TODO"] = "vocal.wav",
+--           },
+--           flair_chance = 0.05,
+--         },
+--         techno = {
+--           beat_files = {
+--             default = { "techno_kick1.wav", "techno_kick2.wav" },
+--             enter = { "techno_snare1.wav", "techno_snare2.wav" },
+--             brace = { "techno_hihat1.wav", "techno_hihat2.wav" },
+--             flair = { "techno_scratch.wav" },
+--           },
+--           loop = "techno_loop.wav",
+--           language_triggers = {
+--             python = { [":"] = "techno_snare1.wav", ["def"] = "techno_hihat1.wav" },
+--             lua = { ["function"] = "techno_hihat1.wav", ["end"] = "techno_snare1.wav" },
+--             javascript = { ["=>"] = "techno_snare1.wav", [";"] = "techno_clap1.wav" },
+--           },
+--           regex_triggers = {
+--             ["TODO"] = "techno_vocal.wav",
+--           },
+--           flair_chance = 0.07,
+--         },
+--         jazz = {
+--           beat_files = {
+--             default = { "jazz_kick1.wav", "jazz_kick2.wav" },
+--             enter = { "jazz_snare1.wav", "jazz_snare2.wav" },
+--             brace = { "jazz_cymbal1.wav", "jazz_cymbal2.wav" },
+--             flair = { "jazz_snap.wav" },
+--           },
+--           loop = "jazz_loop.wav",
+--           language_triggers = {
+--             python = { [":"] = "jazz_snare1.wav", ["def"] = "jazz_cymbal1.wav" },
+--             lua = { ["function"] = "jazz_cymbal1.wav", ["end"] = "jazz_snare1.wav" },
+--             javascript = { ["=>"] = "jazz_snare1.wav", [";"] = "jazz_snap.wav" },
+--           },
+--           regex_triggers = {
+--             ["TODO"] = "jazz_vocal.wav",
+--           },
+--           flair_chance = 0.03,
+--         },
+--       },
+--       active_theme = "default",
+--       cooldown = 0.1,
+--       volume = 50,
+--       loop_volume = 40,
+--       loop_enabled = true,
+--     })
+--
+--     vim.keymap.set("n", "<leader>dj", require("deej").toggle, { desc = "Toggle Deej" })
+--     vim.keymap.set("n", "<leader>dt", ":DeejSetTheme ", { desc = "Set Deej Theme" })
+--     vim.keymap.set("n", "<leader>dl", ":DeejToggleLoop<CR>", { desc = "Toggle Deej Loop" })
+--   end,
+-- }
