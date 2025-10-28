@@ -115,9 +115,6 @@ export EDITOR='nvim'
 
 set -o vi
 
-alias vi="nvim"
-alias vim="nvim"
-
 export PATH="$PATH:/home/al/.local/bin"
 
 export KUBECONFIG="/home/al/.kube/stage-cluster.yaml:/home/al/.kube/production-cluster.yaml"
@@ -138,7 +135,11 @@ bindkey '^R' history-incremental-search-backward
 alias proxyset='export http_proxy=http://127.0.0.1:2080 && export https_proxy=$http_proxy && export all_proxy=$http_proxy && echo "Proxy set to $http_proxy"'
 alias proxyunset='unset http_proxy && unset https_proxy && unset all_proxy && echo "Proxy unset"'
 
+alias vi="nvim"
+alias vim='proxyset && nvim'
+
 alias kproxyset='export http_proxy=socks5://127.0.0.1:9000 && socks_proxy=$http_proxy && export https_proxy=$http_proxy && export all_proxy=$http_proxy && echo "Karnameh Proxy set to $http_proxy"'
+alias kproxyunset='unset http_proxy && unset https_proxy && unset all_proxy && echo "Karnameh Proxy unset"'
 
 export PYAUTOENV_VENV_NAME=".venv;venv;env"
 
