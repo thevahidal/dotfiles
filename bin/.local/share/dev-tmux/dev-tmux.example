@@ -1,0 +1,11 @@
+# Copy to your project root as `.dev-tmux`, or export DEV_TMUX_* from a thin wrapper.
+# Values may be bare or single/double-quoted.
+
+SESSION=myapp
+BACKEND_DIR=server
+BACKEND_CMD="uv run manage.py runserver"
+FRONTEND_DIR=web
+FRONTEND_CMD="npm start"
+PORTS="8000 4200"
+# AGENT_CMD=agent
+# AGENT_CMD=   # empty → top-left stays a plain shell

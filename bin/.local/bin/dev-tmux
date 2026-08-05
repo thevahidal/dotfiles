@@ -1,0 +1,196 @@
+#!/usr/bin/env bash
+# Generic backend + frontend tmux launcher.
+#
+# Layout:
+#   +--------+----------+
+#   | agent  | empty    |
+#   +--------+----------+
+#   | backend| frontend |
+#   +--------+----------+
+#
+# Usage:
+#   dev-tmux [ROOT]           # start or attach (ROOT defaults to cwd)
+#   dev-tmux --kill [ROOT]    # kill session + free PORTS
+#
+# Config (later wins): defaults → $ROOT/.dev-tmux → env DEV_TMUX_*
+# See: ~/.local/share/dev-tmux/dev-tmux.example
+set -euo pipefail
+
+usage() {
+  cat >&2 <<'EOF'
+Usage: dev-tmux [--kill] [ROOT]
+
+Config file: $ROOT/.dev-tmux  (KEY=value)
+Env overrides: DEV_TMUX_SESSION, DEV_TMUX_BACKEND_DIR, DEV_TMUX_BACKEND_CMD,
+               DEV_TMUX_FRONTEND_DIR, DEV_TMUX_FRONTEND_CMD, DEV_TMUX_PORTS,
+               DEV_TMUX_AGENT_CMD
+EOF
+  exit 2
+}
+
+KILL=0
+ROOT=""
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --kill) KILL=1; shift ;;
+    -h|--help) usage ;;
+    -*)
+      echo "Unknown option: $1" >&2
+      usage
+      ;;
+    *)
+      [[ -n "$ROOT" ]] && usage
+      ROOT=$1
+      shift
+      ;;
+  esac
+done
+
+ROOT="${ROOT:-${DEV_TMUX_ROOT:-$PWD}}"
+ROOT="$(cd "$ROOT" && pwd)"
+
+# Defaults — project file / env fill these in.
+SESSION="$(basename "$ROOT")"
+BACKEND_DIR=server
+BACKEND_CMD=""
+FRONTEND_DIR=web
+FRONTEND_CMD=""
+PORTS=""
+AGENT_CMD=agent
+
+load_config() {
+  local file=$1 key val
+  [[ -f "$file" ]] || return 0
+  # Only KEY=value / comments / blanks — no arbitrary shell.
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    [[ -z "$line" || "$line" =~ ^[[:space:]]*# ]] && continue
+    if [[ "$line" =~ ^([A-Za-z_][A-Za-z0-9_]*)=(.*)$ ]]; then
+      key=${BASH_REMATCH[1]}
+      val=${BASH_REMATCH[2]}
+      printf -v "$key" '%s' "$val"
+    else
+      echo "dev-tmux: bad config line in $file: $line" >&2
+      exit 1
+    fi
+  done <"$file"
+}
+
+load_config "$ROOT/.dev-tmux"
+
+# Env wins over file (wrappers / one-off overrides).
+SESSION="${DEV_TMUX_SESSION:-$SESSION}"
+BACKEND_DIR="${DEV_TMUX_BACKEND_DIR:-$BACKEND_DIR}"
+BACKEND_CMD="${DEV_TMUX_BACKEND_CMD:-$BACKEND_CMD}"
+FRONTEND_DIR="${DEV_TMUX_FRONTEND_DIR:-$FRONTEND_DIR}"
+FRONTEND_CMD="${DEV_TMUX_FRONTEND_CMD:-$FRONTEND_CMD}"
+PORTS="${DEV_TMUX_PORTS:-$PORTS}"
+AGENT_CMD="${DEV_TMUX_AGENT_CMD:-$AGENT_CMD}"
+
+# Strip optional surrounding quotes from config values.
+strip_quotes() {
+  local v=$1
+  if [[ ${#v} -ge 2 ]]; then
+    local f=${v:0:1} l=${v: -1}
+    if [[ ( $f == '"' && $l == '"' ) || ( $f == "'" && $l == "'" ) ]]; then
+      printf '%s' "${v:1:${#v}-2}"
+      return
+    fi
+  fi
+  printf '%s' "$v"
+}
+SESSION="$(strip_quotes "$SESSION")"
+BACKEND_DIR="$(strip_quotes "$BACKEND_DIR")"
+BACKEND_CMD="$(strip_quotes "$BACKEND_CMD")"
+FRONTEND_DIR="$(strip_quotes "$FRONTEND_DIR")"
+FRONTEND_CMD="$(strip_quotes "$FRONTEND_CMD")"
+PORTS="$(strip_quotes "$PORTS")"
+AGENT_CMD="$(strip_quotes "$AGENT_CMD")"
+
+if ! command -v tmux >/dev/null 2>&1; then
+  echo "tmux not found. Install: brew install tmux" >&2
+  exit 1
+fi
+
+# tmux kill-session only signals the pane shells; dev servers reparent to init
+# and keep their listening sockets, so free the ports explicitly.
+free_port() {
+  local port=$1 pids i
+  pids=$(lsof -ti "tcp:$port" -sTCP:LISTEN 2>/dev/null || true)
+  if [[ -z "$pids" ]]; then
+    echo "Port $port already free"
+    return
+  fi
+
+  echo "Port $port held by:"
+  # shellcheck disable=SC2086
+  ps -o pid=,command= -p $pids | sed 's/^/  /'
+
+  # shellcheck disable=SC2086
+  kill $pids 2>/dev/null || true
+  for ((i = 0; i < 20; i++)); do
+    pids=$(lsof -ti "tcp:$port" -sTCP:LISTEN 2>/dev/null || true)
+    [[ -z "$pids" ]] && break
+    sleep 0.25
+  done
+
+  if [[ -n "$pids" ]]; then
+    # shellcheck disable=SC2086
+    kill -9 $pids 2>/dev/null || true
+    echo "Port $port force-killed"
+  else
+    echo "Port $port freed"
+  fi
+}
+
+if [[ "$KILL" -eq 1 ]]; then
+  if tmux has-session -t "$SESSION" 2>/dev/null; then
+    tmux kill-session -t "$SESSION"
+    echo "Killed tmux session '$SESSION'"
+  else
+    echo "No tmux session '$SESSION'"
+  fi
+
+  if [[ -n "$PORTS" ]]; then
+    if command -v lsof >/dev/null 2>&1; then
+      # shellcheck disable=SC2086
+      for port in $PORTS; do
+        free_port "$port"
+      done
+    else
+      echo "lsof not found — skipped port cleanup ($PORTS)" >&2
+    fi
+  fi
+  exit 0
+fi
+
+if tmux has-session -t "$SESSION" 2>/dev/null; then
+  exec tmux attach -t "$SESSION"
+fi
+
+if [[ -z "$BACKEND_CMD" || -z "$FRONTEND_CMD" ]]; then
+  echo "dev-tmux: BACKEND_CMD and FRONTEND_CMD required (set in $ROOT/.dev-tmux or DEV_TMUX_*)." >&2
+  echo "Example: ~/.local/share/dev-tmux/dev-tmux.example" >&2
+  exit 1
+fi
+
+# Fresh session: 2x2 — agent | empty / backend | frontend
+# Use pane IDs (-P -F) — index numbers shift after each split.
+tmux new-session -d -s "$SESSION" -n dev -c "$ROOT"
+PANE_AGENT=$(tmux display-message -t "$SESSION:dev" -p '#{pane_id}')
+if [[ -n "$AGENT_CMD" ]]; then
+  tmux send-keys -t "$PANE_AGENT" "$AGENT_CMD" C-m
+fi
+
+PANE_EMPTY=$(tmux split-window -P -F '#{pane_id}' -h -t "$PANE_AGENT" -c "$ROOT")
+
+# -p = new (bottom) pane %; top keeps rest → taller first row
+PANE_BACKEND=$(tmux split-window -P -F '#{pane_id}' -v -p 25 -t "$PANE_AGENT" -c "$ROOT/$BACKEND_DIR")
+tmux send-keys -t "$PANE_BACKEND" "$BACKEND_CMD" C-m
+
+PANE_FRONTEND=$(tmux split-window -P -F '#{pane_id}' -v -p 25 -t "$PANE_EMPTY" -c "$ROOT/$FRONTEND_DIR")
+tmux send-keys -t "$PANE_FRONTEND" "$FRONTEND_CMD" C-m
+
+# Do not use `tiled` — it equalizes and wipes the -p heights
+tmux select-pane -t "$PANE_EMPTY"
+
+exec tmux attach -t "$SESSION"

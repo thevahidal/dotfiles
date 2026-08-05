@@ -26,7 +26,34 @@ The directory structure is simple: each program has its own folder (a "package")
     ```bash
     stow -t ~ zsh
     stow -t ~ nvim
+    stow -t ~ tmux
+    stow -t ~ bin
     ```
+
+    Packages:
+    | Package | Links into `~` |
+    |---|---|
+    | `zsh` | `.zshrc` |
+    | `nvim` | `.config/nvim` |
+    | `git` | `.gitconfig` |
+    | `fontconfig` | `.config/fontconfig` |
+    | `tmux` | `.tmux.conf` |
+    | `bin` | `.local/bin/dev-tmux`, `.local/share/dev-tmux/` |
+
+### `dev-tmux` — backend + frontend tmux env
+
+Shared 2×2 layout (`agent | empty` / `backend | frontend`). Project-specific paths and commands come from `$ROOT/.dev-tmux` or `DEV_TMUX_*` env (thin wrappers).
+
+```bash
+# In a project with .dev-tmux:
+dev-tmux
+dev-tmux --kill
+
+# Or point at a root:
+dev-tmux ~/code/myapp
+```
+
+See `~/.local/share/dev-tmux/dev-tmux.example` after stowing `bin`.
 
     *To install the all packages:*
 
