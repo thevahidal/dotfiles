@@ -18,4 +18,9 @@
 	st = status
 [pull]
 	rebase = true
-
+[includeIf "gitdir:~/dev/karnameh/"]
+  path = .gitconfig-karnameh
+[includeIf "gitdir:~/dev/huma/"]
+  path = .gitconfig-huma
+[url "git@github.com:"]
+	insteadOf = https://github.com/

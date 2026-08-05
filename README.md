@@ -15,7 +15,7 @@ The directory structure is simple: each program has its own folder (a "package")
 1. **Navigate to the Stow directory:**
 
     ```bash
-    cd ~/dev/dotfiles
+    cd ~/dev/personal/dotfiles
     ```
 
 2. **Install (Stow) a package:**

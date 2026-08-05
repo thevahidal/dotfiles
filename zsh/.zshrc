@@ -122,7 +122,10 @@ export KUBECONFIG="/home/al/.kube/stage-cluster.yaml:/home/al/.kube/production-c
 # eval "$(pyenv init -)"
 export WORKON_HOME=$HOME/.virtualenvs
 
-source /usr/share/nvm/init-nvm.sh
+# source /usr/share/nvm/init-nvm.sh
+export NVM_DIR="$HOME/.nvm"
+[ -s "/opt/homebrew/opt/nvm/nvm.sh" ] && \. "/opt/homebrew/opt/nvm/nvm.sh"  # This loads nvm
+[ -s "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm" ] && \. "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm"  # This loads nvm bash_completion
 
 
 export SONAR_SCANNER_HOME="/opt/sonar-scanner"
@@ -136,19 +139,20 @@ alias proxyset='export http_proxy=http://127.0.0.1:2080 && export https_proxy=$h
 alias proxyunset='unset http_proxy && unset https_proxy && unset all_proxy && echo "Proxy unset"'
 
 alias vi="nvim"
-alias vim='proxyset && nvim'
+# alias vim='proxyset && nvim'
+alias vim='nvim'
 
 alias kproxyset='export http_proxy=socks5://127.0.0.1:9000 && socks_proxy=$http_proxy && export https_proxy=$http_proxy && export all_proxy=$http_proxy && echo "Karnameh Proxy set to $http_proxy"'
 alias kproxyunset='unset http_proxy && unset https_proxy && unset all_proxy && echo "Karnameh Proxy unset"'
 
 export PYAUTOENV_VENV_NAME=".venv;venv;env"
 
-alias open="nautilus"
+# alias open="dolphin"
 
 export TERM="xterm-256color"
 export COLORTERM="truecolor"
 
-source <(kubectl completion zsh)
+# source <(kubectl completion zsh)
 export MOZ_ENABLE_WAYLAND=0
 
 alias jn='
@@ -161,3 +165,11 @@ alias jn='
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+
+# Added by Antigravity
+export PATH="/Users/vahidalavi/.antigravity/antigravity/bin:$PATH"
+export PATH="$HOME/.local/bin:$PATH"
+
+
+# Added by Antigravity CLI installer
+export PATH="/Users/vahidalavi/.local/bin:$PATH"
